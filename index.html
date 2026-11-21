@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test API AM</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #111; color: #fff; }
+        input, button { width: 100%; padding: 10px; margin: 5px 0; box-sizing: border-box; border-radius: 5px; }
+        input { background: #222; border: 1px solid #444; color: #fff; }
+        button { background: #ffaa00; color: #000; font-weight: bold; border: none; cursor: pointer; }
+        button:active { background: #cc8800; }
+        #log { background: #222; padding: 10px; white-space: pre-wrap; margin-top: 20px; font-size: 12px; border: 1px solid #444; height: 300px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <h3>Tes Bypass AM Premium</h3>
+    
+    <label>Email Target (Email Baru):</label>
+    <input type="email" id="email" placeholder="contoh@gmail.com">
+
+    <label>OOB Code / Link Verifikasi:</label>
+    <input type="text" id="oob" placeholder="Paste link verifikasi dari email di sini">
+
+    <button onclick="step1()">1. Kirim Magic Link (Cek Email)</button>
+    <button onclick="step2()">2. Verifikasi & Kirim Token Premium</button>
+
+    <div id="log">Status: Menunggu...</div>
+
+    <script>
+        // URL Vercel Lo
+        const API_URL = 'https://api-am-ku.vercel.app'; 
+        
+        const log = (msg) => {
+            const el = document.getElementById('log');
+            el.innerText += "\n" + msg;
+            el.scrollTop = el.scrollHeight;
+        };
+
+        async function step1() {
+            const email = document.getElementById('email').value;
+            if(!email) return alert("Isi email dulu!");
+            
+            log("\nMengirim Magic Link...");
+            try {
+                const res = await fetch(`${API_URL}/api/send-link`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: email })
+                });
+                const data = await res.json();
+                
+                if(data.success) {
+                    log("✅ Link terkirim! Cek email lo.");
+                } else {
+                    log("❌ Gagal: " + JSON.stringify(data));
+                }
+            } catch (e) { log("❌ Error: " + e.message); }
+        }
+
+        async function step2() {
+            const email = document.getElementById('email').value;
+            const rawLink = document.getElementById('oob').value;
+            if(!email || !rawLink) return alert("Isi email dan link verifikasinya!");
+
+            // Extract oobCode
+            let oobCode = null;
+            const match = rawLink.match(/oobCode=([a-zA-Z0-9_-]+)/i);
+            if (match) oobCode = match[1];
+            else if (/^[a-zA-Z0-9_-]{10,}$/.test(rawLink.trim()) && !rawLink.includes('://')) oobCode = rawLink.trim();
+
+            if(!oobCode) return log("❌ Link / OOB Code nggak valid.");
+
+            log("\nVerifikasi OOB Code...");
+            try {
+                const res = await fetch(`${API_URL}/api/verify`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: email, oobCode: oobCode })
+                });
+                
+                const data = await res.json();
+                
+                if(data.success) {
+                    log("✅ Dapet ID Token & Tembak Premium...");
+                    log("\n--- HASIL PREMIUM ---");
+                    log(JSON.stringify(data.result, null, 2));
+                    
+                    if(data.result && data.result.result && data.result.result.isPremium) {
+                        log("\n🔥 SUKSES! Akun lo udah premium. Buka Alight Motion sekarang.");
+                    } else {
+                        log("\n⚠️ API merespon, tapi status premium gagal. Cek token Play Store, mungkin udah expired.");
+                    }
+                } else {
+                    log("❌ Gagal: " + JSON.stringify(data));
+                }
+            } catch (e) { log("❌ Error: " + e.message); }
+        }
+    </script>
+</body>
+</html>
