@@ -28,7 +28,6 @@
     <div id="log">Status: Menunggu...</div>
 
     <script>
-        // URL Vercel Lo
         const API_URL = 'https://api-am-ku.vercel.app'; 
         
         const log = (msg) => {
@@ -51,7 +50,9 @@
                 const data = await res.json();
                 
                 if(data.success) {
-                    log("✅ Link terkirim! Cek email lo.");
+                    log("✅ Tembakan berhasil!");
+                    log("CEK KODE RAHASIA DI BAWAH INI:");
+                    log(JSON.stringify(data.raw_google, null, 2));
                 } else {
                     log("❌ Gagal: " + JSON.stringify(data));
                 }
