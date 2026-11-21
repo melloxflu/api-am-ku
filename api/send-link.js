@@ -14,6 +14,6 @@ export default async function handler(req, res) {
             })
         });
         const data = await response.json();
-        return res.status(200).json({ success: true, raw: data });
+        return res.status(200).json({ success: true, raw_google: data });
     } catch (e) { return res.status(500).json({ error: e.message }); }
 }
